@@ -9,49 +9,32 @@ namespace S7_300_MockingServer_UI
 
         MaxwellForm maxForm = new MaxwellForm();
 
-        static byte[] response = new byte[]
-            {
-                /* Headers */
+        static byte[] response = new byte[] {
+    // TPKT Header
+    0x03, 0x00, 0x00, 0x15,  // Total Length = 21 bytes (adjusted for 2-byte parameter)
 
-                0x03, 0x00, 0x00, 0xE1,                         // TPKT Header (Length: 225 bytes)
-                0x02, 0xF0, 0x80,                               // ISO Header
-                0x32, 0x03, 0x00, 0x00,                         // S7Comm Header with Return Code
-                0x05, 0x00, 0x00, 0x02, 0x00,                   // Sequence Length + Reserved
-                0xCC, 0x00, 0x00, 0x04, 0x01, 0xFF, 0x04, 0x06, // Header Info
-                0x40,                                           // Header Reference Data
-                
+    // COTP Header
+    0x02, 0xF0, 0x80,        // COTP Header
 
-                /* S7 Payload */
+    // S7Comm Header
+    0x32,                    // Protocol ID
+    0x03,                    // Message Type: Ack_Data
+    0x00, 0x00,              // Reserved
+    0x00, 0x02,              // Parameter Length = 2 bytes (S7 Parameter added)
+    0x00, 0x01,              // Data Length = 1 byte (payload size)
+    0x00, 0x00,              // Reserved
 
-                //1   //B                   //0 <- ReadRequest FLAG                                 
-                0x31, 0x42, /*byte 27 -> */ 0x30,               // HeartBit, Assy Type, ReadRequest
-                0x30, 0x30,                                     // Dummy
-                0x30, 0x30,                                     // Work Complete and Work Result 
-                0x30, 0x30, 0x30,                               // Dummy
+    // S7Comm Parameter (2 bytes)
+    0x04, 0x01,              // Parameter: Ack_Data specifics (common for read responses)
 
- /*byte 35 -> */0x42, 0x42, 0x34, 0x31,                         // B B 4 1
-                0x46, 0x33, 0x4C, 0x41, 0x51, 0x4C,             // F3LAQL
-                0x31, 0x32, 0x33,                               // 123
-                0x34, 0x35, 0x36,                               // 456
-                
-                0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x30, 0x30, 0x30, 0x30, 0x30,
-                0x30, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-            };
+    // S7Comm Payload (1 byte)
+    0x00                     // Actual payload (example: single byte)
+};
+
+
+
+
+
 
         Thread loopThread;
         private CancellationTokenSource cancellationTokenSource;
@@ -129,32 +112,6 @@ namespace S7_300_MockingServer_UI
             }
         }
 
-
-        private static void HandlePingConnection(Socket clientSocket)
-        {
-            try
-            {
-                byte[] buffer = new byte[1024];
-
-                while (true)
-                {
-                    int bytesRead = clientSocket.Receive(buffer);
-                    if (bytesRead == 0)
-                        break;
-
-                    Debug.WriteLine("Ping packet received, sending TCP ACK.");
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Ping connection error: {ex.Message}");
-            }
-            finally
-            {
-                clientSocket.Close();
-                Debug.WriteLine("Ping connection closed.");
-            }
-        }
 
         private static void HandleRealConnection(Socket clientSocket)
         {
@@ -328,15 +285,15 @@ namespace S7_300_MockingServer_UI
             Debug.WriteLine($"Response Length Before Padding: {response.Length} bytes");
 
             // Ensure we have exactly 225 bytes
-            if (response.Length < 225)
-            {
-                int missingBytes = 225 - response.Length;
-                byte[] padding = new byte[missingBytes];
-                byte[] completeResponse = new byte[225];
-                Buffer.BlockCopy(response, 0, completeResponse, 0, response.Length);
-                Buffer.BlockCopy(padding, 0, completeResponse, response.Length, missingBytes);
-                response = completeResponse;
-            }
+            //if (response.Length < 225)
+            //{
+            //    int missingBytes = 225 - response.Length;
+            //    byte[] padding = new byte[missingBytes];
+            //    byte[] completeResponse = new byte[225];
+            //    Buffer.BlockCopy(response, 0, completeResponse, 0, response.Length);
+            //    Buffer.BlockCopy(padding, 0, completeResponse, response.Length, missingBytes);
+            //    response = completeResponse;
+            //}
 
             Debug.WriteLine($"Response Length After Padding: {response.Length} bytes");
 

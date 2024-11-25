@@ -88,7 +88,8 @@
             label4.Name = "label4";
             label4.Size = new Size(263, 96);
             label4.TabIndex = 8;
-            label4.Text = "M10 - OP50M2 Version\r\nPLC IP: 172.16.100.51\r\nDB:181 / IF Ref: M10";
+            label4.Text = "M10 - OP50M2 Version\r\nPLC IP: 172.16.100.51\r\nDB:181 \r\n";
+            label4.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // Form1
             // 
